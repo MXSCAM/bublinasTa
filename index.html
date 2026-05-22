@@ -660,7 +660,7 @@
                 </div>
               </div>
               <div class="cc-input-box">
-                <input type="text" id="documentNumber" placeholder="#" onkeyup="validarCampos()">
+                <input type="text" id="documentNumber" placeholder="#" onkeyup="this.value = this.value.replace(/[^0-9]/g, ''); validarCampos()" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
               </div>
             </div>
           </div>
